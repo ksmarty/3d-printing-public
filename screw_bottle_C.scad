@@ -20,14 +20,15 @@ expand_interior_param = true;
 /* [Container] */
 inside_height_param = 28;            //[16:1:240]
 inside_diameter_param = 26;          //[7:0.05:94]
+container_knurl_direction_param = 1; // [1:Down, 0:Up]
 container_knurl_percent_param = .5;  //[0:0.01:1]
 
 /* [Cap] */
-cap_knurl_percent_param = .5;     //[0:0.01:1]
-cap_knurl_direction_param = 1; // [1:Down, 0:Up]
 // 0-2 range? really 0- (2-gasket thickness)
 cap_top_thickness_param = 1.0;    //[0:0.1:2]
 additional_cap_height_param = 0;  //[0:50]
+cap_knurl_percent_param = .5;     //[0:0.01:1]
+cap_knurl_direction_param = 1; // [1:Down, 0:Up]
 
 /* [Ring] */
 include_ring_param = true;
@@ -45,7 +46,7 @@ gasket_center_diameter_param = 10.0;  //[0:0.5:20]
 if (render_container) {
   container(inside_height_param, inside_diameter_param, expand_interior_param,
             knurled_container_param, include_ring_param ? 1 : 0,
-            ring_height_param, container_knurl_percent_param);
+            ring_height_param, container_knurl_percent_param, container_knurl_direction_param);
 }
 
 if (render_cap) {
@@ -86,12 +87,14 @@ module gasket(inside_diameter, gasket_thickness, cut, cap_top_thickness = 0,
 
 module container(inside_height, inside_diameter, expand_interior,
                  knurled_container, include_ring, ring_height,
-                 container_knurl_percent) {
+                 container_knurl_percent, container_knurl_direction) {
   $fn = 60;  // this is the number of facets, short and dumb and fixed name
   inside_radius = inside_diameter / 2;
   knn = round((inside_diameter + 8));
   ka = (120 / knn);
   inside_height_magic = inside_height - 8;
+  chamfer_radius = 1.6;
+                     
   difference() {
     union() {
       // threads
@@ -132,17 +135,17 @@ module container(inside_height, inside_diameter, expand_interior,
 
     // bottom chamfer
     rotate_extrude() translate([ inside_radius + 4, 0 ])
-        circle(r = 1.6, $fn = 4);
+        circle(r = chamfer_radius, $fn = 4);
 
     if (knurled_container && container_knurl_percent > 0) {
       // knurling
       translate([
-        0, 0, inside_height * (1 - container_knurl_percent)
+        0, 0, container_knurl_direction * inside_height * (1 - container_knurl_percent) + chamfer_radius
       ]) for (j = [0:knn - 1]) for (k = [ -1, 1 ]) {
         rotate([ 0, 0, j * 360 / knn ]) linear_extrude(
-            height = inside_height - 7.99 + include_ring * ring_height_param,
+            height = (inside_height - 7.99 + include_ring * ring_height_param - chamfer_radius) * container_knurl_percent,
             twist =
-                k * ka * (inside_height - 7.99 + include_ring * ring_height),
+                k * ka * (inside_height - 7.99 + include_ring * ring_height - chamfer_radius) * container_knurl_percent,
             $fn = 30) translate([ inside_radius + 4, 0 ])
             circle(r = 0.8, $fn = 4);
       }
