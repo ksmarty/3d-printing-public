@@ -7,28 +7,24 @@
 // semicolons are WEIRD
 
 /* [General] */
-PieceToRender = 0;  //[0:All pieces, 1:Container, 2:Cap, 3:Ring, 4:Gasket]
-
-// applied to both sides of gasket
-/* [Container] */
-inside_height_param = 28;            //[16:1:240]
-inside_diameter_param = 26;          //[7:1:94]
-container_knurl_percent_param = .5;  //[0:0.01:1]
+render_container = true;
+render_cap = true;
+render_ring = true;
+render_gasket = true;
 
 /* [Knurling] */
 knurled_container_param = true;
 knurled_cap_param = true;
 expand_interior_param = true;
 
-/* [Gasket] */
-include_gasket_param = true;
-gasket_thickness_param = 2.2;         //[0:0.01:2]
-gasket_tolerance_param = 0.05;        //[0:0.001:1]
-gasket_center_diameter_param = 10.0;  //[0:0.5:20]
+/* [Container] */
+inside_height_param = 28;            //[16:1:240]
+inside_diameter_param = 26;          //[7:0.05:94]
+container_knurl_percent_param = .5;  //[0:0.01:1]
 
 /* [Cap] */
-// 0-2 range? really 0- (2-gasket thickness)
 cap_knurl_percent_param = .5;     //[0:0.01:1]
+// 0-2 range? really 0- (2-gasket thickness)
 cap_top_thickness_param = 1.0;    //[0:0.1:2]
 additional_cap_height_param = 0;  //[0:50]
 
@@ -37,24 +33,30 @@ include_ring_param = true;
 ring_height_param = 4;  //[1:50]
 ring_text_param = "W O W";
 
+/* [Gasket] */
+include_gasket_param = true;
+gasket_thickness_param = 2.2;         //[0:0.01:2]
+gasket_tolerance_param = 0.05;        //[0:0.001:1]
+gasket_center_diameter_param = 10.0;  //[0:0.5:20]
+
 // Overall height with cap and ring will be inside_height + 4
 
-if (PieceToRender == 0 || PieceToRender == 1) {
+if (render_container) {
   container(inside_height_param, inside_diameter_param, expand_interior_param,
             knurled_container_param, include_ring_param ? 1 : 0,
             ring_height_param, container_knurl_percent_param);
 }
 
-if (PieceToRender == 0 || PieceToRender == 2) {
+if (render_cap) {
   cap(inside_diameter_param, knurled_cap_param, additional_cap_height_param,
       cap_knurl_percent_param);
 }
 
-if ((PieceToRender == 0 || PieceToRender == 3) && include_ring_param) {
+if (render_ring && include_ring_param) {
   ring(inside_diameter_param, ring_text_param);
 }
 
-if ((PieceToRender == 0 || PieceToRender == 4) && include_gasket_param) {
+if (render_gasket && include_gasket_param) {
   gasket(inside_diameter_param, gasket_thickness_param, cut = false,
          gasket_center_diameter = gasket_center_diameter_param,
          gasket_tolerance = gasket_tolerance_param);
@@ -131,10 +133,10 @@ module container(inside_height, inside_diameter, expand_interior,
     rotate_extrude() translate([ inside_radius + 4, 0 ])
         circle(r = 1.6, $fn = 4);
 
-    if (knurled_container) {
+    if (knurled_container && container_knurl_percent > 0) {
       // knurling
       translate([
-        0, 0, inside_height * container_knurl_percent
+        0, 0, inside_height * (1 - container_knurl_percent)
       ]) for (j = [0:knn - 1]) for (k = [ -1, 1 ]) {
         rotate([ 0, 0, j * 360 / knn ]) linear_extrude(
             height = inside_height - 7.99 + include_ring * ring_height_param,
@@ -165,9 +167,9 @@ module cap(inside_diameter, knurled_cap, additional_cap_height,
       rotate_extrude() translate([ inside_radius + 4, 0 ])
           circle(r = 1.6, $fn = 4);
 
-      if (knurled_cap == true) {
+      if (knurled_cap == true && cap_knurl_percent > 0) {
         translate([
-          0, 0, (12 + additional_cap_height) * cap_knurl_percent
+          0, 0, (12 + additional_cap_height) * (1 - cap_knurl_percent)
         ]) for (j = [0:knn - 1]) for (k = [ -1, 1 ])
             rotate([ 0, 0, j * 360 / knn ]) linear_extrude(
                 height = 12.1 + additional_cap_height,

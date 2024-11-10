@@ -1,0 +1,32 @@
+{
+    "parameterSets": {
+        "Raw Thin Cone": {
+            "additional_cap_height_param": "0",
+            "cap_knurl_percent_param": "0.87",
+            "cap_top_thickness_param": "1",
+            "container_knurl_percent_param": "0",
+            "expand_interior_param": "true",
+            "gasket_center_diameter_param": "8",
+            "gasket_thickness_param": "1",
+            "gasket_tolerance_param": "0",
+            "include_gasket_param": "true",
+            "include_ring_param": "false",
+            "inside_diameter_param": "9",
+            "inside_height_param": "100",
+            "knurled_cap_param": "true",
+            "knurled_container_param": "false",
+            "render_cap": "true",
+            "render_container": "true",
+            "render_gasket": "true",
+            "render_ring": "false",
+            "ring_height_param": "1",
+            "ring_text_param": ""
+        }
+    },
+    "parameterSets": "",
+    "fileFormatVersion": "1",
+    "parameterSets": "",
+    "parameterSets": "",
+    "parameterSets": "",
+    "parameterSets": ""
+}
