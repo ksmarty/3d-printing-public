@@ -24,6 +24,7 @@ container_knurl_percent_param = .5;  //[0:0.01:1]
 
 /* [Cap] */
 cap_knurl_percent_param = .5;     //[0:0.01:1]
+cap_knurl_direction_param = 1; // [1:Down, 0:Up]
 // 0-2 range? really 0- (2-gasket thickness)
 cap_top_thickness_param = 1.0;    //[0:0.1:2]
 additional_cap_height_param = 0;  //[0:50]
@@ -49,7 +50,7 @@ if (render_container) {
 
 if (render_cap) {
   cap(inside_diameter_param, knurled_cap_param, additional_cap_height_param,
-      cap_knurl_percent_param);
+      cap_knurl_percent_param, cap_knurl_direction_param);
 }
 
 if (render_ring && include_ring_param) {
@@ -150,32 +151,41 @@ module container(inside_height, inside_diameter, expand_interior,
 }
 
 module cap(inside_diameter, knurled_cap, additional_cap_height,
-           cap_knurl_percent) {
+           cap_knurl_percent, cap_knurl_direction) {
   $fn = 60;
   inside_radius = inside_diameter / 2;
   knn = round((inside_diameter + 8) * 1.0);
   ka = 120 / knn;
+  outer_chamfer_radius = 1.6;
+  cap_height = 12;
 
   difference() {
     translate([ inside_diameter + 10, 0, 0 ]) difference() {
-      cylinder(r = inside_radius + 4, h = 12 + additional_cap_height);
+      // base
+      cylinder(r = inside_radius + 4, h = cap_height + additional_cap_height);
+        
+      // knurling
+      if (knurled_cap == true && cap_knurl_percent > 0) {
+        translate([
+          0, 0, cap_knurl_direction * ((cap_height + additional_cap_height)) * (1 - cap_knurl_percent) + outer_chamfer_radius
+        ]) for (j = [0:knn - 1]) 
+            for (k = [ -1, 1 ])
+            rotate([ 0, 0, j * 360 / knn ]) linear_extrude(
+                height = (cap_height + 0.1 + additional_cap_height - outer_chamfer_radius) *  cap_knurl_percent,
+                twist = k * ka * ((cap_height + 0.1 + additional_cap_height - outer_chamfer_radius) * cap_knurl_percent), $fn = 30)
+                translate([ inside_radius + 4, 0 ]) circle(r = 0.8, $fn = 4);
+      }
 
+      // threads
       translate([ 0, 0, 2 + additional_cap_height ])
           linear_extrude(height = 10.1, twist = -180 * 10.1)
               translate([ 0.5, 0 ]) circle(r = inside_radius + 1.8);
 
+      // outside chamfer
       rotate_extrude() translate([ inside_radius + 4, 0 ])
-          circle(r = 1.6, $fn = 4);
-
-      if (knurled_cap == true && cap_knurl_percent > 0) {
-        translate([
-          0, 0, (12 + additional_cap_height) * (1 - cap_knurl_percent)
-        ]) for (j = [0:knn - 1]) for (k = [ -1, 1 ])
-            rotate([ 0, 0, j * 360 / knn ]) linear_extrude(
-                height = 12.1 + additional_cap_height,
-                twist = k * ka * (12.1 + additional_cap_height), $fn = 30)
-                translate([ inside_radius + 4, 0 ]) circle(r = 0.8, $fn = 4);
-      }
+         circle(r = outer_chamfer_radius, $fn = 4);
+      
+      // inside chamfer
       translate([ 0, 0, 10 + additional_cap_height ])
           cylinder(r1 = inside_radius + 1.5, r2 = inside_radius + 2.5, h = 2.1);
 
